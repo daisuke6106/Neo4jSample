@@ -8,30 +8,37 @@ import org.neo4j.graphdb.Transaction;
 import org.neo4j.graphdb.factory.GraphDatabaseFactory;
 
 public class Neo4jSample {
-
+	
 	public static void main(String[] args) {
 		
 		GraphDatabaseService graphDB = new GraphDatabaseFactory().newEmbeddedDatabase("/tmp/neo4j_sample");
 		Transaction tx = graphDB.beginTx();
 		
 		try {
-			Node firstNode = graphDB.createNode();
-			Node secondNode = graphDB.createNode();
-			Relationship relationship = firstNode.createRelationshipTo( secondNode, MyRelationshipTypes.KNOWS );
-			firstNode.setProperty( "message", "Hello, " );
-			secondNode.setProperty( "message", "world!" );
-			relationship.setProperty( "message", "brave Neo4j " );
+			Node user_master = createUser(graphDB, "山田太郎", "19851010", "神奈川県横浜市１−１−１");
+			
+			for (int i=0; i<1000; i++) {
+				Node user = createUser(graphDB, "山田太郎" + i, "19851010", "神奈川県横浜市１−１−１");
+				Relationship relationship = user_master.createRelationshipTo( user, MyRelationshipTypes.KNOWS );
+				relationship.setProperty( "Relationship", "Friend" );
+			}
+			
 			tx.success();
-			System.out.print( firstNode.getProperty( "message" ) );
-			System.out.print( relationship.getProperty( "message" ) );
-			System.out.print( secondNode.getProperty( "message" ) );
-
+			
 		} finally {
 			tx.finish();
 			graphDB.shutdown();
 		}
 	}
-
+	
+	static Node createUser(GraphDatabaseService graphDB, String name, String birth, String address) {
+		Node user = graphDB.createNode();
+		user.setProperty("name", name);
+		user.setProperty("birth", birth);
+		user.setProperty("address", address);
+		return user;
+	}
+	
 }
 
 enum MyRelationshipTypes implements RelationshipType
